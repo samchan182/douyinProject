@@ -24,6 +24,7 @@ export default function ResultDisplay({
       <div className="flex flex-col gap-4">
         <h2 className="text-xl font-semibold text-gray-800">Translated Image</h2>
         <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={translatedImage}
             alt="Translated screenshot"

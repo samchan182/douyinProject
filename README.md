@@ -57,6 +57,6 @@ Then restart the dev server.
 
 ## Network / Proxy
 
-This project uses `undici.ProxyAgent` to route Gemini API calls through a local proxy at `http://127.0.0.1:7897`. If your proxy runs on a different port, update the proxy URL in `src/lib/gemini.ts`.
+This project uses `undici.ProxyAgent` to route Gemini API calls through a local proxy. By default, it uses `http://127.0.0.1:7897`, but it will automatically use the `HTTPS_PROXY` or `HTTP_PROXY` environment variables if they are set.
 
 Node.js's built-in `fetch` does NOT respect `HTTPS_PROXY` environment variables. That is why `undici` is used directly.

@@ -1,12 +1,19 @@
 import { NextRequest } from "next/server";
 import { callGemini } from "@/lib/gemini";
-import { imageTranslationPrompt, douyinContentPrompt } from "@/lib/prompts";
+import { imageTranslationPrompt as defaultTranslationPrompt, douyinContentPrompt as defaultCaptionPrompt } from "@/lib/prompts";
 import { processImage } from "@/lib/image-processor";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get("image") as File | null;
+    const apiKey = formData.get("apiKey") as string | null;
+    
+    const customTranslationPrompt = formData.get("translationPrompt") as string | null;
+    const customCaptionPrompt = formData.get("captionPrompt") as string | null;
+
+    const finalTranslationPrompt = customTranslationPrompt || defaultTranslationPrompt;
+    const finalCaptionPrompt = customCaptionPrompt || defaultCaptionPrompt;
 
     if (!file) {
       return Response.json({ error: "No image provided" }, { status: 400 });
@@ -21,10 +28,10 @@ export async function POST(request: NextRequest) {
       inlineData: { mimeType, data: base64Image },
     };
 
-    // Run both Gemini calls in parallel
+    // Run both Gemini calls in parallel using the finalized prompts
     const [translationText, douyinCaption] = await Promise.all([
-      callGemini([imagePart, { text: imageTranslationPrompt }]),
-      callGemini([imagePart, { text: douyinContentPrompt }]),
+      callGemini([imagePart, { text: finalTranslationPrompt }], apiKey || undefined),
+      callGemini([imagePart, { text: finalCaptionPrompt }], apiKey || undefined),
     ]);
 
     // Parse translation JSON
