@@ -95,31 +95,33 @@ export async function processImage(
   }
 
   // Replace text blocks
-  for (const block of translationData.text_blocks) {
-    const x = (block.position.x_percent / 100) * img.width;
-    const y = (block.position.y_percent / 100) * img.height;
-    const w = (block.position.width_percent / 100) * img.width;
-    const h = (block.position.height_percent / 100) * img.height;
+  if (Array.isArray(translationData.text_blocks)) {
+    for (const block of translationData.text_blocks) {
+      const x = (block.position.x_percent / 100) * img.width;
+      const y = (block.position.y_percent / 100) * img.height;
+      const w = (block.position.width_percent / 100) * img.width;
+      const h = (block.position.height_percent / 100) * img.height;
 
-    // Cover original text with background color
-    const bgColor = block.style.background_color || "#ffffff";
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(x, y, w, h);
+      // Cover original text with background color
+      const bgColor = block.style.background_color || "#ffffff";
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(x, y, w, h);
 
-    // Draw translated text
-    const fontSize = getFontSize(block.style.font_size, h);
-    const fontWeight = block.style.bold ? "bold" : "normal";
-    ctx.font = `${fontWeight} ${fontSize}px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`;
-    ctx.fillStyle = block.style.color || "#000000";
-    ctx.textBaseline = "top";
+      // Draw translated text
+      const fontSize = getFontSize(block.style.font_size, h);
+      const fontWeight = block.style.bold ? "bold" : "normal";
+      ctx.font = `${fontWeight} ${fontSize}px "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif`;
+      ctx.fillStyle = block.style.color || "#000000";
+      ctx.textBaseline = "top";
 
-    const lines = wrapText(ctx, block.translated, w - 8);
-    const lineHeight = fontSize * 1.3;
-    const totalTextHeight = lines.length * lineHeight;
-    const startY = y + (h - totalTextHeight) / 2;
+      const lines = wrapText(ctx, block.translated, w - 8);
+      const lineHeight = fontSize * 1.3;
+      const totalTextHeight = lines.length * lineHeight;
+      const startY = y + (h - totalTextHeight) / 2;
 
-    for (let i = 0; i < lines.length; i++) {
-      ctx.fillText(lines[i], x + 4, startY + i * lineHeight);
+      for (let i = 0; i < lines.length; i++) {
+        ctx.fillText(lines[i], x + 4, startY + i * lineHeight);
+      }
     }
   }
 

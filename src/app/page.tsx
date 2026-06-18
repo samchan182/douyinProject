@@ -5,6 +5,7 @@ import UploadZone from "./components/UploadZone";
 import ResultDisplay from "./components/ResultDisplay";
 import ApiKeyInput from "./components/ApiKeyInput";
 import PromptEditor from "./components/PromptEditor";
+import ContentSettings from "./components/ContentSettings";
 import { imageTranslationPrompt as defaultTranslationPrompt, douyinContentPrompt as defaultCaptionPrompt } from "@/lib/prompts";
 
 interface ProcessResult {
@@ -22,8 +23,10 @@ export default function Home() {
   // States for custom prompts
   const [translationPrompt, setTranslationPrompt] = useState(defaultTranslationPrompt);
   const [captionPrompt, setCaptionPrompt] = useState(defaultCaptionPrompt);
-  const [isTranslationPromptLocked, setIsTranslationPromptLocked] = useState(false);
-  const [isCaptionPromptLocked, setIsCaptionPromptLocked] = useState(false);
+  
+  // States for content settings
+  const [platform, setPlatform] = useState("Douyin / TikTok");
+  const [tone, setTone] = useState("Engaging & Viral");
 
   const handleKeyChange = useCallback((key: string | null) => {
     setApiKey(key);
@@ -32,11 +35,6 @@ export default function Home() {
   const handleFileSelect = async (file: File) => {
     if (!apiKey) {
       setError("Please configure and validate your API key in the panel below first.");
-      return;
-    }
-
-    if (!isTranslationPromptLocked || !isCaptionPromptLocked) {
-      setError("Please confirm both prompts in the editors below before uploading an image.");
       return;
     }
 
@@ -55,6 +53,8 @@ export default function Home() {
       formData.append("apiKey", apiKey);
       formData.append("translationPrompt", translationPrompt);
       formData.append("captionPrompt", captionPrompt);
+      formData.append("platform", platform);
+      formData.append("tone", tone);
 
       const response = await fetch("/api/process", {
         method: "POST",
@@ -79,20 +79,23 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-50 via-white to-cyan-50 py-12 px-4">
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         
-        <header className="text-center mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">
+        <header className="text-center mb-4">
+          <div className="inline-block px-3 py-1 mb-4 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold tracking-wider uppercase shadow-sm">
+            AI Powered
+          </div>
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-cyan-600 tracking-tight">
             Douyin Content Generator
           </h1>
-          <p className="text-gray-500 mt-2">
+          <p className="text-gray-500 mt-3 text-lg font-medium">
             Upload a screenshot — get a translated image + ready-to-post Douyin caption
           </p>
         </header>
 
         {/* 1. Generator Frame */}
-        <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-xl p-6 md:p-8 rounded-2xl shadow-xl shadow-indigo-100/50 border border-white">
           <UploadZone onFileSelect={handleFileSelect} isProcessing={isProcessing} />
 
           {/* Original image preview */}
@@ -131,19 +134,25 @@ export default function Home() {
           <ApiKeyInput onKeyChange={handleKeyChange} />
         </div>
 
-        {/* 3. Prompt Configuration Frames */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* 3. Content Preferences */}
+        <ContentSettings 
+          platform={platform} 
+          setPlatform={setPlatform} 
+          tone={tone} 
+          setTone={setTone} 
+        />
+
+        {/* 4. Prompt Configuration Frames */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
           <PromptEditor 
             title="Image Translation Prompt" 
-            defaultText={defaultTranslationPrompt} 
-            onConfirm={setTranslationPrompt} 
-            onLockChange={setIsTranslationPromptLocked}
+            value={translationPrompt} 
+            onChange={setTranslationPrompt} 
           />
           <PromptEditor 
             title="Douyin Caption Prompt" 
-            defaultText={defaultCaptionPrompt} 
-            onConfirm={setCaptionPrompt} 
-            onLockChange={setIsCaptionPromptLocked}
+            value={captionPrompt} 
+            onChange={setCaptionPrompt} 
           />
         </div>
 

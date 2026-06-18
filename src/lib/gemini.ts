@@ -1,10 +1,5 @@
 import { ProxyAgent, fetch as undiciFetch } from "undici";
 
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not set in environment variables");
-}
-
 const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || "http://127.0.0.1:7897";
 const proxyAgent = new ProxyAgent(proxyUrl);
 const MODEL = "gemini-2.5-flash";
@@ -24,8 +19,8 @@ interface GeminiResponse {
   error?: { code: number; message: string };
 }
 
-export async function callGemini(parts: GeminiPart[], customApiKey?: string): Promise<string> {
-  const activeApiKey = customApiKey || apiKey;
+export async function callGemini(parts: GeminiPart[], customApiKey?: string, responseMimeType?: string): Promise<string> {
+  const activeApiKey = customApiKey || process.env.GEMINI_API_KEY;
   
   if (!activeApiKey) {
     throw new Error("API key is not set. Please provide a valid Gemini API key.");
@@ -33,13 +28,21 @@ export async function callGemini(parts: GeminiPart[], customApiKey?: string): Pr
 
   const url = `${BASE_URL}/models/${MODEL}:generateContent?key=${activeApiKey}`;
 
+  const requestBody: { contents: Array<{ parts: GeminiPart[] }>, generationConfig?: { responseMimeType: string } } = {
+    contents: [{ parts }],
+  };
+
+  if (responseMimeType) {
+    requestBody.generationConfig = {
+      responseMimeType: responseMimeType,
+    };
+  }
+
   const response = await undiciFetch(url, {
     method: "POST",
     dispatcher: proxyAgent,
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts }],
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   const responseText = await response.text();

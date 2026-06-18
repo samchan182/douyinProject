@@ -62,12 +62,12 @@ export default function ApiKeyInput({ onKeyChange }: ApiKeyInputProps) {
   };
 
   return (
-    <div className="w-full bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-      <h3 className="text-base font-semibold text-gray-800 mb-2">API Configuration</h3>
-      <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+    <div className="w-full bg-white/80 backdrop-blur-xl p-6 rounded-2xl shadow-lg shadow-indigo-100/30 border border-white">
+      <h3 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 to-indigo-500 mb-2">API Configuration</h3>
+      <p className="text-sm text-gray-500 mb-5 leading-relaxed">
         Please upload your API key. Ensure the associated model supports image editing (vision capabilities).
       </p>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <input
           type="password"
           value={apiKey}
@@ -78,12 +78,12 @@ export default function ApiKeyInput({ onKeyChange }: ApiKeyInputProps) {
             }
           }}
           placeholder="Enter API Key (AIzaSy...)"
-          className="w-full text-sm px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:outline-none transition-shadow"
+          className="w-full text-gray-900 bg-white text-sm px-4 py-3 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none transition-shadow shadow-sm placeholder:text-gray-400"
         />
         <button
           onClick={handleValidate}
           disabled={status === "validating" || !apiKey.trim()}
-          className="w-full py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
+          className="w-full py-3 bg-gradient-to-r from-indigo-600 to-cyan-600 text-white text-sm font-bold rounded-xl hover:from-indigo-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-200 transform transition-all active:scale-[0.98]"
         >
           {status === "validating" ? "Validating Key..." : "Test & Save Key"}
         </button>

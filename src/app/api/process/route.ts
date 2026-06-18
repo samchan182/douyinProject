@@ -11,9 +11,17 @@ export async function POST(request: NextRequest) {
     
     const customTranslationPrompt = formData.get("translationPrompt") as string | null;
     const customCaptionPrompt = formData.get("captionPrompt") as string | null;
+    const platform = formData.get("platform") as string | null;
+    const tone = formData.get("tone") as string | null;
 
     const finalTranslationPrompt = customTranslationPrompt || defaultTranslationPrompt;
-    const finalCaptionPrompt = customCaptionPrompt || defaultCaptionPrompt;
+    let finalCaptionPrompt = customCaptionPrompt || defaultCaptionPrompt;
+
+    if (platform || tone) {
+      finalCaptionPrompt += `\n\n--- ADDITIONAL REQUIREMENTS ---\n`;
+      if (platform) finalCaptionPrompt += `- Target Platform: ${platform} (Adjust formatting, tags, and emojis appropriately for this platform's culture).\n`;
+      if (tone) finalCaptionPrompt += `- Tone of Voice: ${tone}.\n`;
+    }
 
     if (!file) {
       return Response.json({ error: "No image provided" }, { status: 400 });
@@ -30,17 +38,13 @@ export async function POST(request: NextRequest) {
 
     // Run both Gemini calls in parallel using the finalized prompts
     const [translationText, douyinCaption] = await Promise.all([
-      callGemini([imagePart, { text: finalTranslationPrompt }], apiKey || undefined),
+      callGemini([imagePart, { text: finalTranslationPrompt }], apiKey || undefined, "application/json"),
       callGemini([imagePart, { text: finalCaptionPrompt }], apiKey || undefined),
     ]);
 
-    // Parse translation JSON
-    const jsonMatch = translationText.match(/```(?:json)?\s*([\s\S]*?)```/);
-    const cleanJson = jsonMatch ? jsonMatch[1].trim() : translationText.trim();
-
     let translationData;
     try {
-      translationData = JSON.parse(cleanJson);
+      translationData = JSON.parse(translationText);
     } catch {
       return Response.json(
         { error: "Failed to parse translation response", raw: translationText },
@@ -59,9 +63,20 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Processing error:", error);
+    let status = 500;
+    const message = error instanceof Error ? error.message : "Processing failed";
+    
+    // Extract status code from Gemini API error format if present
+    const statusMatch = message.match(/Gemini API error \((\d+)\)/);
+    if (statusMatch && !isNaN(parseInt(statusMatch[1], 10))) {
+      status = parseInt(statusMatch[1], 10);
+      // Ensure we don't use non-standard HTTP status codes that Next.js might reject
+      if (status < 400 || status > 599) status = 500;
+    }
+
     return Response.json(
-      { error: error instanceof Error ? error.message : "Processing failed" },
-      { status: 500 }
+      { error: message },
+      { status }
     );
   }
 }
